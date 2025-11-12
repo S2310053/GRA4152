@@ -31,7 +31,7 @@ encoder_mlp = Sequential(
                         ]
                         )
 # Output
-out     = encoder_mpl(x)
+out     = encoder_mpl(x)       #missing data x
 mu      = out[:,:latent_dim]
 log_var = out[:,latent_dim:]
 std     = tf.math.exp(0.5 * log_var)

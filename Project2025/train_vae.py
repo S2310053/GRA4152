@@ -1,5 +1,5 @@
 ## 
-#  This module represents the pseoudocode for the trian_vae.py
+#  This PROGRAM represents the pseoudocode for the trian_vae.py
 # 
 
 # Load the dataset given args arguments

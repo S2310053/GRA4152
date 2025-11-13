@@ -3,10 +3,16 @@
 #  Downloads, processes and loads the data
 #
 
+# How to use wget with subprocess.run() link
+# https://www.webscrapingapi.com/effortlessly-download-web-pages-and-files-with-python-and-wget
+
+# Libraries
+import subprocess
+
 
 ##########################################
 #
-# Adress to get the data set minst_bw
+# Adress to get the data set mnist_bw
 # file type: npy
 # images size: (28,28,1)
 #
@@ -38,3 +44,14 @@
 
 # Labels, which are useful to color scatters of the latent space
 'https://www.dropbox.com/scl/fi/fkf20sjci5ojhuftc0ro0/mnist_color_y_te.npy?rlkey=fshs83hd5pvo81ag3z209tf6v&st=99z1o18q&dl=0'
+
+
+
+###########################################
+# DRAFT CODE STARTS HERE
+###########################################
+
+# Think of this as instance variables from calls that are going to be called to other class
+
+# Get the train dataset mnist_bw
+mnistbwDatasetTrain = subprocess.run(["wget", 'https://www.dropbox.com/scl/fi/fjye8km5530t9981ulrll/mnist_bw.npy?rlkey=ou7nt8t88wx1z38nodjjx6lch&st=5swdpnbr&dl=0'])

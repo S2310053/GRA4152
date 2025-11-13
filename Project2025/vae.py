@@ -69,6 +69,6 @@ def plot_grid(images, N = 10, C = 10, figsize = (24., 28.), name = "posterior)":
                   ax.set_yticks([])
 
               plt.plot.subplots_adjust(wspace = 0, hspace  = 0)
-              plt.save("./xhat_bw_" + name + ".pdf") #if bw image
+              plt.save("./xhat_bw_" + name + ".pdf") #if bw image and posterior
               plt.close()
               

@@ -2,16 +2,16 @@
 #  This PROGRAM represents the pseoudocode for the trian_vae.py
 # 
 
-# Load the dataset given args arguments
+# i) Load the dataset given args arguments
 my_data_loader = DataLoader(dseet=args.dset)
 
-# Initialize the VAE model
+# ii) Initialize the VAE model
 model = VAE() # Use default values as prof, or pass arguments with argpase
 
-# Set the optimizer
+# iii) Set the optimizer
 optimizer = tf.keras.optimizers.Adam(learning_rate = 1e-3)
 
-# Invoke the method train using mini batch from my_data_loader
+# iv) Invoke the method train using mini batch from my_data_loader
 tr_data = my_data_loader.get_training_data
 
 # Complete number of epochs pass through entire training set 

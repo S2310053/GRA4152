@@ -41,3 +41,34 @@ def train(self, x, optimizer):
 
     return loss
 
+#########################################
+#
+# Code to plot a 10x10 grid of images
+# size (N,H,W,C)
+# N(=100) <- number of samples
+# H(=28)  <- height
+# W(=28)  <- width
+# C(=1 black-white,=3 color) is channels
+# 
+#########################################
+
+#Libraries
+from mlp_toolkits.axes_grid1 import ImageGrid
+
+# Ajust parameters depending on data format
+def plot_grid(images, N = 10, C = 10, figsize = (24., 28.), name = "posterior)":
+              fig  = plt.figure(figsize = figsize)
+              grid = ImageGrid(fig, 111, #similar to subplot(111)
+                               nrows_ncols = (N, C),
+                               axes_pad    = 0 #pad between Axes in inch.
+                               )
+              for ax, im in zip(grid, images):
+              #Iterating over the grid returns the Axes 
+                  ax.imshow(im)
+                  ax.set_xticks([])
+                  ax.set_yticks([])
+
+              plt.plot.subplots_adjust(wspace = 0, hspace  = 0)
+              plt.save("./xhat_bw_" + name + ".pdf") #if bw image
+              plt.close()
+              

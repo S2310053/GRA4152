@@ -1,7 +1,14 @@
 ##
-#  This module defines the Decoder class
+#  This module defines the encoder class
 #  Contains the specific behavior in encoders
 #
+
+# Libraries
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+from tensorflow.keras import layers
+from tensorflow.keras import activations
+from tensorflow.keras.models import Sequential
 
 #####################################
 #
@@ -12,13 +19,6 @@
 # z = mu + std*epsilon
 #
 #####################################
-
-#Libraries
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from tensorflow.keras import layers
-from tensorflow.keras import activations
-from tensorflow.keras.models import Sequential
 
 # Parameters
 input_shape = (28*28, )
@@ -39,6 +39,8 @@ out     = encoder_mpl(x)       #missing data x
 mu      = out[:, :latent_dim]
 log_var = out[:, latent_dim:]
 std     = tf.math.exp(0.5 * log_var)
+eps     = tf.random.normal(mu.shape)
+z       = mu + std*eps
 
 # stopped at output_dim = 28*28
 
@@ -84,5 +86,3 @@ eps     = tf.random.normal(mu.shape)
 z       = mu + std*eps
 
 # Stopped at target_shape = (4,4,128)
-
-

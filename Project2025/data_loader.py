@@ -5,6 +5,7 @@
 
 # Libraries
 import numpy as np
+import pickle
 
 
 ## Load and process mnist_bw data
@@ -37,11 +38,19 @@ dataTestBlackWhite  = dataTestBlackWhite.astype("float32")  / 255
 dataTrainBlackWhite = dataTrainBlackWhite.reshape((60000, 28 * 28))
 dataTestBlackWhite  = dataTestBlackWhite.reshape(( 10000, 28 * 28))
 
-print(dataTrainBlackWhite.shape)
-print(dataTestBlackWhite.shape)
+#print(dataTrainBlackWhite.shape)
+#print(dataTestBlackWhite.shape)
 
 ## Load (no further processing) mnist_color data
 #  Needs:
 #  Train  <- mnist_color.pkl
 #  Test   <- mnist_color_te.pkl
 #  Labels <- mnist_color_y_te.npy
+
+# Load data 
+filenameDataTrainColor  = "mnist_color.pkl"
+filenameDataTestColor   = "mnist_color_te.pkl"
+filenameDataLabelsColor = "mnist_color_y_te.npy"
+
+with open(filenameDataTrainColor, "rb") as file:
+    data = pickle.load(file)

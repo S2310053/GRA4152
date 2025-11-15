@@ -20,21 +20,19 @@ from bicoder import BiCoder
 #  representation z used as input of the generative model p(x|z) (decoder)
 #
 class Encoder(layers.Layer, BiCoder):
-    # Default parameter for both classes
-    
+    # Default parameters specific for this class
+    # Set as static variables
 
-    ## Get the default parameters from BiCoder class
-    #  @call the parent's (superclass) constructor first
-    # 
-    def __init_(self):
-        super().__init__(BiCoder)
-       
-        # Parameters specific for the black and white images MLP model encoder
-        self._inputShapeBlackWhite = (28 * 28, )
-        self._unitsBlackWhite      = 400
+    # Parameters specific for the black and white images MLP model encoder
+    _inputShapeBlackWhite = (28 * 28, )
+    _unitsBlackWhite      = 400
 
-        # Parameter specific for the color images convolutional neural network model encoder
-        self._inputShapeColor      = (28, 28, 3)
+    # Parameter specific for the color images convolutional neural network model encoder
+    _inputShapeColor      = (28, 28, 3)
+
+    ## Define the constructor and set default values
+    #
+    def __init__(self):
 
     ## Generate the encoder z for black and white images
     #  Gaussian encoder for vectorized images

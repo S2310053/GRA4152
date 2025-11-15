@@ -23,40 +23,41 @@ from tensorflow.keras.models import Sequential
 #  There's a direct mechanism to get this values
 #
 class BiCoder(layers.Layer):
+    # Set default parameters that are common in
+    # encoder and decoders as static variables
+
+    # Both encoder and decoders for black and white and color images
+    _activation                = "relu"
+                                               
+    # Encoder and decoder black and white images
+    _latentDimensionBlackWhite = 20 
+
+    # Encoder and decoder color images
+    _filtersColor              = 32
+    _latentDimensionColor      = 50
+    _stridesColor              = 2
+    _kernelSizeColor           = 3
+    _paddingColor              = "same"
    
-    ## Initialize instance variables in the constructor
-    #
-    def __init__(self):
-        # Set default parameters that are common in
-        # encoder and decoders
-
-        # Both encoder and decoders for black and white and color images
-        self._activation                = "relu"
-           
-        # Encoder and decoder black and white images
-        self._latentDimensionBlackWhite = 20 
-
-        # Encoder and decoder color images
-        self._filtersColor              = 32
-        self._latentDimensionColor      = 50
-        self._stridesColor              = 2
-        self._kernelSizeColor           = 3
-        self._paddingColor              = "same"
-
     ## Computes the z encoder value from a prior p(z) distribution
     #  @return prior z from and isotropic Gaussian distribution N(0,I)
     #
-    def encoderPriorDistribution(self):
+    @staticmethod
+    def getZPriorDistribution():
 
     ## Computes the z encoder from a posterior q(z|x) distribution
     #  @param output encoder from the Black and White MLP or Color Convolutional Neural Network
     #  @param latentDimension either from Black and White or Color images
     #  @return z as encoder
-    def encoderPosteriorDistribution(self, output, latentDimension):
+    #
+    @staticmethod
+    def _calculateZPosteriorDistribution(output, latentDimension):
 
     ## Computes the xhat decoder where z is used as input
     #  @param mean of decoder from the Black and White MLP or Color Convolutional Neural Network
     #  @param standardDeviation fixed as it is challenging
     #  @return xhat decoder as sample of new data
-    def decoderBlackWhiteColor(self, mean, standardDeviation = 0.75):
+    #
+    @staticmethod
+    def _calculateXhatPosteriorDistribution(mean, standardDeviation = 0.75):
 

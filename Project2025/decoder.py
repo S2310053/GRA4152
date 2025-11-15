@@ -30,6 +30,10 @@ class Decoder(layers.Layer, BiCoder):
         _targetShapeColor   = (4, 4, 128)
         _channelOutputColor = 3
         _unitsColor         = np.prod(_targetShapeColor)
+
+        ## Initialize class and set default parameters
+        #
+        def __init__(self):
    
         ## Generate the decoder xhat for black and white images
         #  Gaussian decoder for vectorized images
@@ -38,15 +42,15 @@ class Decoder(layers.Layer, BiCoder):
         #  @return    mean (Gaussian distribution) of the MLP model
         #
         @BiCoder._calculateXhatPosteriorDistribution
-        def getDecoderMLP(self,newdata):
+        def ngetDecoderMLP(self,newdata):
 
 
         ## Generate the decoder z for the color images
         #  Convolutional neural network decoder
-        #  @decorator BiCoder._calculateZPosteriorDistribution transform output with equation x from posterior distribution
+        #  @decorator BiCoder._calculateXPosteriorDistribution transform output with equation x from posterior distribution
         #  @param     data x (color images)
         #  @return    mean (Gaussian distribution) of convolutional neural network model
         #
         @BiCoder._calculateZPosteriorDistribution
-        def getDecoderCNN(self, data):
+        def getDecoderCNN(self, newdata):
 

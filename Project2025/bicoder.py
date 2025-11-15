@@ -39,12 +39,6 @@ class BiCoder(layers.Layer):
     _kernelSizeColor           = 3
     _paddingColor              = "same"
    
-    ## Computes the z encoder value from a prior p(z) distribution
-    #  @return prior z from and isotropic Gaussian distribution N(0,I)
-    #
-    @staticmethod
-    def getZPriorDistribution():
-
     ## Computes the z encoder from a posterior q(z|x) distribution
     #  @param output encoder from the Black and White MLP or Color Convolutional Neural Network
     #  @param latentDimension either from Black and White or Color images

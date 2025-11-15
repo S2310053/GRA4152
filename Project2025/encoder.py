@@ -34,6 +34,11 @@ class Encoder(layers.Layer, BiCoder):
     #
     def __init__(self):
 
+    ## Computes the z encoder value from a prior p(z) distribution
+    #  @return prior z from and isotropic Gaussian distribution N(0,I)
+    #  
+    def getEncoderPriorDistribution():
+
     ## Generate the encoder z for black and white images
     #  Gaussian encoder for vectorized images
     #  MLP models with one hidden layer
@@ -41,7 +46,7 @@ class Encoder(layers.Layer, BiCoder):
     #  @param data x (black and white images) from the dataset
     #  @return output parameters (Gaussian distribution) of the MLP model
     #
-    @Bicoder._calculateZPosteriorDistribution
+    @BiCoder._calculateZPosteriorDistribution
     def getEncoderMLP(self, data):
 
     ## Generate the encoder z for the color images
@@ -50,5 +55,5 @@ class Encoder(layers.Layer, BiCoder):
     #  @param data x (color images)
     #  @return output parameters (Gaussian distribution) of convolutional neural network model
     #
-    @Bicoder._calculateZPosteriorDistribution
+    @BiCoder._calculateZPosteriorDistribution
     def getEncoderCNN(self, data):

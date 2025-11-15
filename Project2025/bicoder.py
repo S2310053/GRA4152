@@ -30,10 +30,10 @@ class BiCoder(layers.Layer):
     # Both encoder and decoders for black and white and color images
     _activation                = "relu"
    
-    # Encoder black and white images
+    # Encoder and decoder black and white images
     _latentDimensionBlackWhite = 20
 
-    # Encoder color images
+    # Encoder and decoder color images
     _filtersColor              = 32
     _latentDimensionColor      = 50
     _stridesColor              = 2

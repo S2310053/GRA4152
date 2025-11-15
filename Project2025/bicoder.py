@@ -23,25 +23,25 @@ from tensorflow.keras.models import Sequential
 #  There's a direct mechanism to get this values
 #
 class BiCoder(layers.Layer):
-    ## Set default parameters that are common in
-    #  encoder and decoders known as class variable
-    #
-
-    # Both encoder and decoders for black and white and color images
-    _activation                = "relu"
    
-    # Encoder and decoder black and white images
-    _latentDimensionBlackWhite = 20
-
-    # Encoder and decoder color images
-    _filtersColor              = 32
-    _latentDimensionColor      = 50
-    _stridesColor              = 2
-    _kernelSizeColor           = 3
-
     ## Initialize instance variables in the constructor
     #
     def __init__(self):
+        # Set default parameters that are common in
+        # encoder and decoders
+
+        # Both encoder and decoders for black and white and color images
+        self._activation                = "relu"
+           
+        # Encoder and decoder black and white images
+        self._latentDimensionBlackWhite = 20 
+
+        # Encoder and decoder color images
+        self._filtersColor              = 32
+        self._latentDimensionColor      = 50
+        self._stridesColor              = 2
+        self._kernelSizeColor           = 3
+        self._paddingColor              = "same"
 
     ## Computes the z encoder value from a prior p(z) distribution
     #  @return prior z from and isotropic Gaussian distribution N(0,I)

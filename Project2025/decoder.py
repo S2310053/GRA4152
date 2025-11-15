@@ -38,19 +38,20 @@ class Decoder(layers.Layer, BiCoder):
         ## Generate the decoder xhat for black and white images
         #  Gaussian decoder for vectorized images
         #  MLP models with one hidden layer
-        #  @decorator BiCoder._calculateXhatPosteriorDistribution transform data with equation used to get x from posterior distribution                    #  @param     data z (black and white images) from encoder
+        #  @decorator BiCoder._calculateXhatPosteriorDistribution transform data with equation used to get x from posterior distribution
+        #  @param     data x (black and white images) from encoder
         #  @return    mean (Gaussian distribution) of the MLP model
         #
         @BiCoder._calculateXhatPosteriorDistribution
-        def ngetDecoderMLP(self,newdata):
+        def getDecoderMLP(self,newdata):
 
 
         ## Generate the decoder z for the color images
         #  Convolutional neural network decoder
         #  @decorator BiCoder._calculateXPosteriorDistribution transform output with equation x from posterior distribution
-        #  @param     data x (color images)
+        #  @param     data x (color images) from encoder
         #  @return    mean (Gaussian distribution) of convolutional neural network model
         #
-        @BiCoder._calculateZPosteriorDistribution
+        @BiCoder._calculateXhatPosteriorDistribution
         def getDecoderCNN(self, newdata):
 

@@ -6,13 +6,14 @@
 ## Load necessary libraries and packages
 #  @library numpy as np
 #  @library os, os.environ 3 to just include tensorflow error messages
-#  @module layers from tensorflow.keras reusable when stating weights NN
-#  @module activations from tensorflow.keras adds non-linearity to model
-#  @module Sequential from tensorflow.keras stacks layers
+#  @module  layers from tensorflow.keras reusable when stating weights NN
+#  @module  activations from tensorflow.keras adds non-linearity to model
+#  @module  Sequential from tensorflow.keras stacks layers
 #
 import numpy as np
 import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import activations
 from tensorflow.keras.models import Sequential
@@ -24,7 +25,7 @@ from tensorflow.keras.models import Sequential
 #
 class BiCoder(layers.Layer):
     # Set default parameters that are common in
-    # encoder and decoders as static variables
+    # encoder and decoders and we keep them as static variables
 
     # Both encoder and decoders for black and white and color images
     _activation                = "relu"
@@ -46,6 +47,11 @@ class BiCoder(layers.Layer):
     #
     @staticmethod
     def _calculateZPosteriorDistribution(output, latentDimension):
+        _mean              = output[:, :latentDimension]
+        _logVariance       = output[:, latentDimension:]
+        _standardDeviation = tf.math.exp(1 / 2 * logVariance)
+        _epsilon           = tf.random.normal(_mean.shape)
+        return _mean + _standardDeviation*_epsilon
 
     ## Computes the xhat decoder where z is used as input
     #  @param mean of decoder from the Black and White MLP or Color Convolutional Neural Network
@@ -54,4 +60,7 @@ class BiCoder(layers.Layer):
     #
     @staticmethod
     def _calculateXhatPosteriorDistribution(mean, standardDeviation = 0.75):
-
+       _mean              = mean
+       _standardDeviation = StandardDeviation
+       _epsilon           = tf.random.normal(_mean.shape)
+       return _mean + _standardDeviation*_epsilon

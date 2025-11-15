@@ -5,12 +5,15 @@
 
 ## Load necessary libraries and modules
 #  @library os, os.environ 3 to just include tensorflow error messages
+#  @library tensorflow to generate isotropic p(z) distribution
 #  @module layers from tensorflow.keras reusable when stating weights NN
 #  @module activations from tensorflow.keras adds non-linearity to model
 #  @module Sequential from tensorflow.keras stacks layers
 #  @module BiCoder retrieves general formulas for z(decoder) and xhat(decoder)
+#
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" 
+import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import activations
 from tensorflow.keras.models import Sequential
@@ -24,11 +27,13 @@ class Encoder(layers.Layer, BiCoder):
     # Set as static variables
 
     # Parameters specific for the black and white images MLP model encoder
-    _inputShapeBlackWhite = (28 * 28, )
-    _unitsBlackWhite      = 400
+    _inputShapeBlackWhite      = (28 * 28, )
+    _latentDimensionBlackWhite = 20
+    _unitsBlackWhite           = 400
 
     # Parameter specific for the color images convolutional neural network model encoder
-    _inputShapeColor      = (28, 28, 3)
+    _inputShapeColor           = (28, 28, 3)
+    _latentDimensionColor      = 50 
 
     ## Define the constructor and set default values
     #
@@ -37,7 +42,11 @@ class Encoder(layers.Layer, BiCoder):
     ## Computes the z encoder value from a prior p(z) distribution
     #  @return prior z from and isotropic Gaussian distribution N(0,I)
     #  
-    def getEncoderPriorDistribution():
+    def getEncoderIsotropic(self,latentDimension):
+
+        return tf.random.normal(
+
+
 
     ## Generate the encoder z for black and white images
     #  Gaussian encoder for vectorized images

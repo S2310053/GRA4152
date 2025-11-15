@@ -18,3 +18,5 @@ from tensorflow.keras.models import Sequential
 ## Probabilistic encoders take the input of data x and learn a latent
 #  representation z used as input of the generative model p(x|z) (decoder)
 #
+class Encoder(layers.Layer, BiCoder)::
+

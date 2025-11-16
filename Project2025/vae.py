@@ -96,24 +96,33 @@ class VAE(tf.keras.Model):
         print(f"Latent space saved to {savefig}")
 
    # image gird plot
-    def plot_grid(self, images, N=10, C=10, figsize=(18,18), name="generated"):
-    # Just in case images were not converted yet
+    def plot_grid(self, images, N=10, C=10, figsize=(18, 18), name="generated"):
+        """
+        Plot a grid of generated or reconstructed images and save as PDF.
+        Accepts both flattened BW images (784,) and color (28,28,3) tensors.
+        """
+        # Convert to uint8 if still float
         if images.dtype != np.uint8:
             images = tf.clip_by_value(255 * images, 0, 255).numpy().astype(np.uint8)
     
+        fig = plt.figure(figsize=figsize)
+        grid = ImageGrid(fig, 111, nrows_ncols=(N, C), axes_pad=0)
+    
         for ax, im in zip(grid, images):
-            # Handle flatten or (28,28,1)
+            # Reshape for grayscale 28x28
             if im.ndim == 1 and im.size == 28 * 28:
                 im = im.reshape(28, 28)
-            elif im.ndim == 3 and im.shape[-1] == 1:
+    
+            # Handle (28,28,1)
+            if im.ndim == 3 and im.shape[-1] == 1:
                 im = im.squeeze(-1)
-        
-            # grayscale vs color
+    
+            # Show grayscale or color image
             if im.ndim == 2:
                 ax.imshow(im, cmap="gray")
             else:
                 ax.imshow(im)
-        
+    
             ax.set_xticks([])
             ax.set_yticks([])
     

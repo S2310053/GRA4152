@@ -88,8 +88,3 @@ class DataLoader():
         return data
 
 
-
-# Test class
-mydata = DataLoader("mnist_color")
-#download = mydata.downloadData("mnist_color")
-data     = mydata.loadData("mnist_color")

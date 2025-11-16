@@ -57,12 +57,11 @@ class VAE(tf.keras.Model):
    
       
     def elbo_loss(self, x, xhat, mu, log_var, color=False):
-          """
-            Computes the NEGATIVE ELBO:
-            L = - E_q[ log p(x|z) ] + KL(q||p)
-            """
+
         log_px_z = self.recon_log_likelihood(x, xhat, color=color)
+        
         kl = self.kl_divergence(mu, log_var)
+        
         return tf.reduce_mean(-log_px_z + kl)
 
 

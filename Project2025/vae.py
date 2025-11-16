@@ -64,7 +64,7 @@ class VAE(tf.keras.Model):
         return tf.reduce_mean(-log_px_z + kl)  # negative ELBO
 
     @tf.function
-    def train(self, x, optimizer, color=False):
+    def train_step(self, x, optimizer, color=False):
         """
         Single gradient update step that explicitly optimizes Negative ELBO.
         """
@@ -96,20 +96,28 @@ class VAE(tf.keras.Model):
         print(f"Latent space saved to {savefig}")
 
    # image gird plot
-    def plot_grid(self, images, N=10, C=10, figsize=(18, 18), name="generated"):
-        fig = plt.figure(figsize=figsize)
-        grid = ImageGrid(fig, 111, nrows_ncols=(N, C), axes_pad=0)
+    def plot_grid(self, images, N=10, C=10, figsize=(18,18), name="generated"):
+    # Just in case images were not converted yet
+    if images.dtype != np.uint8:
+        images = tf.clip_by_value(255 * images, 0, 255).numpy().astype(np.uint8)
 
-        for ax, im in zip(grid, images):
+    fig = plt.figure(figsize=figsize)
+    grid = ImageGrid(fig, 111, nrows_ncols=(N, C), axes_pad=0)
+
+    for ax, im in zip(grid, images):
+        if im.ndim == 2:   # grayscale
+            ax.imshow(im, cmap="gray")
+        else:              # color
             ax.imshow(im)
-            ax.set_xticks([])
-            ax.set_yticks([])
+        ax.set_xticks([])
+        ax.set_yticks([])
 
-        plt.savefig(f"{name}.pdf")
-        plt.close()
-        print(f"Image grid saved to {name}.pdf")
+    plt.savefig(f"{name}.pdf")
+    plt.close()
+    print(f"Saved: {name}.pdf")
 
-   # generate from prio plot
+
+    # generate from prio plot
     def generate_from_prior(self, n=100, color=False):
         latent_dim = BiCoder._latentDimensionColor if color else BiCoder._latentDimensionBlackWhite
         z = tf.random.normal((n, latent_dim))

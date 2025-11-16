@@ -39,6 +39,39 @@ class Encoder(layers.Layer, BiCoder):
     #  Always initialize for best practice
     def __init__(self):
         super().__init__()
+        
+        # Define the black and white encoder once
+        self.encoder_mlp = Sequential([
+            layers.InputLayer(input_shape=self._inputShapeBlackWhite),
+            layers.Dense(BiCoder._unitsBlackWhite, activation=BiCoder._activation),
+            layers.Dense(2 * BiCoder._latentDimensionBlackWhite),
+        ])
+
+        # Define the color encoder once
+        self.encoder_cnn = Sequential([
+            layers.InputLayer(input_shape=self._inputShapeColor),
+            layers.Conv2D(
+                filters=1 * BiCoder._filtersColor,
+                kernel_size=BiCoder._kernelSizeColor,
+                strides=BiCoder._stridesColor,
+                activation=BiCoder._activation,
+                padding=BiCoder._paddingColor),
+            layers.Conv2D(
+                filters=2 * BiCoder._filtersColor,
+                kernel_size=BiCoder._kernelSizeColor,
+                strides=BiCoder._stridesColor,
+                activation=BiCoder._activation,
+                padding=BiCoder._paddingColor),
+            layers.Conv2D(
+                filters=4 * BiCoder._filtersColor,
+                kernel_size=BiCoder._kernelSizeColor,
+                strides=BiCoder._stridesColor,
+                activation=BiCoder._activation,
+                padding=BiCoder._paddingColor),
+            layers.Flatten(),
+            layers.Dense(2 * BiCoder._latentDimensionColor),
+        ])
+    
 
     ## Computes the z encoder value from a prior p(z) distribution
     #  loc as mean value for the first dimension and second dimension
@@ -65,16 +98,8 @@ class Encoder(layers.Layer, BiCoder):
     #  @param data x (black and white images) from the dataset
     #  @return output parameters (Gaussian distribution) of the MLP model now converted to z
     #
-    def getEncoderMLP(self, data):
-        data = tf.reshape(data, (-1, 28 * 28))##
-        _encoderMLP = Sequential(
-                               [
-                               layers.InputLayer(input_shape =self._inputShapeBlackWhite),
-                               layers.Dense(BiCoder._unitsBlackWhite),
-                               layers.Dense(2 * BiCoder._latentDimensionBlackWhite)
-                               ]
-                               )
-        output = _encoderMLP(data)
+    def getEncoderMLP(self, x):
+        output = self.encoder_mlp(x)
         latent_dim = BiCoder._latentDimensionBlackWhite
         mu = output[:, :latent_dim]
         log_var = output[:, latent_dim:]
@@ -87,30 +112,9 @@ class Encoder(layers.Layer, BiCoder):
     #  @param data x (color images)
     #  @return output parameters (Gaussian distribution) of convolutional neural network model now transformed to z
     #
-    def getEncoderCNN(self, data):
-        _encoderCNN = Sequential(
-                                [
-                                layers.InputLayer(input_shape = _inputShapeColor),
-                                layers.Conv2D(
-                                    filters     = 1 * BiCoder._filtersColor,
-                                    kernel_size = BiCoder._kernelSizeColor,
-                                    strides     = BiCoder._stridesColor,
-                                    activation  = BiCoder._activation,
-                                    padding     = BiCoder._paddingColor),
-                                layers.Conv2D(
-                                    filters     = 2 * BiCoder._filtersColor,
-                                    kernel_size = BiCoder._kernelSizeColor,
-                                    strides     = BiCoder._stridesColor,
-                                    activation  = BiCoder._activation,
-                                    padding     = BiCoder._paddingColor),
-                                layers.Conv2D(
-                                    filters     = 4 * BiCoder._filtersColor,
-                                    kernel_size = BiCoder._kernelSizeColor,
-                                    strides     = BiCoder._stridesColor,
-                                    activation  = BiCoder._activation,
-                                    padding     = BiCoder._paddingColor),
-                                layers.Flatten(),
-                                layers.Dense(2 * BiCoder._latentDimensionColor)
-                                ]
-                                )
-        return BiCoder._calculateZPosteriorDistribution(_encoderCNN(data), BiCoder._latentDimensionColor)
+    def getEncoderCNN(self, x):
+        output = self.encoder_cnn(x)
+        latent_dim = BiCoder._latentDimensionColor
+        mu = output[:, :latent_dim]
+        log_var = output[:, latent_dim:]
+        return mu, log_var

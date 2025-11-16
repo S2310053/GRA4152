@@ -69,7 +69,7 @@ class Decoder(layers.Layer, BiCoder):
                              strides=BiCoder._stridesColor,
                              padding=BiCoder._paddingColor,
                              output_padding=1),
-                     layers.Activation("sigmoid", dtype="float32"),
+                     layers.Activation("linear", dtype="float32"),
         ])
         
    

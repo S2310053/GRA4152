@@ -36,6 +36,42 @@ class Decoder(layers.Layer, BiCoder):
         #  Always initialize for best practice
         def __init__(self):
             super().__init__()
+
+        #  Define the MLP decoder ONCE
+        self.decoder_mlp = Sequential([
+            layers.InputLayer(input_shape=(BiCoder._latentDimensionBlackWhite,)),
+            layers.Dense(BiCoder._unitsBlackWhite, activation=BiCoder._activation),
+            layers.Dense(self._outputDimensionBlackWhite),
+        ])
+
+        # Define the CNN decoder ONCE
+        self.decoder_cnn = Sequential([
+            layers.InputLayer(input_shape=(BiCoder._latentDimensionColor,)),
+            layers.Dense(units=self._unitsColor, activation=BiCoder._activation),
+            layers.Reshape(target_shape=self._targetShapeColor),
+            layers.Conv2DTranspose(
+                filters=2 * BiCoder._filtersColor,
+                kernel_size=BiCoder._kernelSizeColor,
+                strides=BiCoder._stridesColor,
+                padding=BiCoder._paddingColor,
+                output_padding=0,
+                activation=BiCoder._activation),
+            layers.Conv2DTranspose(
+                filters=BiCoder._filtersColor,
+                kernel_size=BiCoder._kernelSizeColor,
+                strides=BiCoder._stridesColor,
+                padding=BiCoder._paddingColor,
+                output_padding=1,
+                activation=BiCoder._activation),
+            layers.Conv2DTranspose(
+                filters=self._channelOutputColor,
+                kernel_size=BiCoder._kernelSizeColor,
+                strides=BiCoder._stridesColor,
+                padding=BiCoder._paddingColor,
+                output_padding=1),
+            layers.Activation("linear", dtype="float32"),
+        ])
+        
    
         ## Generate the decoder xhat for black and white images
         #  Gaussian decoder for vectorized images
@@ -46,15 +82,10 @@ class Decoder(layers.Layer, BiCoder):
         #  @param     dataZ (black and white images) from encoder
         #  @return    mean (Gaussian distribution) of the MLP model
         #
-        def getDecoderMLP(self,dataZ):
-            _decoderMLP = Sequential(
-                                   [
-                                   layers.InputLayer(input_shape = BiCoder._latentDimensionBlackWhite),
-                                   layers.Dense(BiCoder._unitsBlackWhite, activation = BiCoder._activation),
-                                   layers.Dense(self._outputDimensionBlackWhite)
-                                   ]
-                                   )
-            return BiCoder._calculateXhatPosteriorDistribution( _decoderMLP(dataZ))
+
+        def getDecoderMLP(self, z):
+                output = self.decoder_mlp(z)
+                return BiCoder._calculateXhatPosteriorDistribution(output)
 
         ## Generate the decoder z for the color images
         #  Convolutional neural network decoder
@@ -63,33 +94,6 @@ class Decoder(layers.Layer, BiCoder):
         #  @param     dataZ (color images) from encoder
         #  @return    mean (Gaussian distribution) of convolutional neural network model
         #
-        def getDecoderCNN(self, dataZ):
-            _decoderCNN = Sequential(
-                                    [
-                                    layers.InputLayer(input_shape = BiCoder._latentDimensionColor),
-                                    layers.Dense(units = self._unitsColor, activation = BiCoder._activation),
-                                    layers.Reshape(target_shape = self._targetShapeColor),
-                                    layers.Conv2DTranspose(
-                                        filters        = 2 * BiCoder._filtersColor,
-                                        kernel_size    = BiCoder._kernelSizeColor,
-                                        strides        = BiCoder._stridesColor,
-                                        padding        = BiCoder._paddingColor,
-                                        output_padding = 0,
-                                        activation     = BiCoder._activation),
-                                    layers.Conv2DTranspose(
-                                        filters        = BiCoder._filtersColor,
-                                        kernel_size    = BiCoder._kernelSizeColor,
-                                        strides        = BiCoder._stridesColor,
-                                        padding        = BiCoder._paddingColor,
-                                        output_padding = 1,
-                                        activation     = BiCoder._activation),
-                                    layers.Conv2DTranspose(
-                                        filters        = self._channelOutputColor,
-                                        kernel_size    = BiCoder._kernelSizeColor,
-                                        strides        = BiCoder._stridesColor,
-                                        padding        = BiCoder._paddingColor,
-                                        output_padding = 1),
-                                    layers.Activation("linear", dtype = "float32"),
-                                    ]
-                                    )
-            return BiCoder._calculateXhatPosteriorDistribution(_decoderCNN(dataZ))
+        def getDecoderCNN(self, z):
+                output = self.decoder_cnn(z)
+                return BiCoder._calculateXhatPosteriorDistribution(output)

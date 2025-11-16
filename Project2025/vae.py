@@ -76,24 +76,40 @@ class VAE(tf.keras.Model):
         optimizer.apply_gradients(zip(grads, self.trainable_variables))
         return loss
 
-    ##### Latent space fplot
-    def visualize_latent(self, dataset, color=False, limit=2000, savefig="latent_space.pdf"):
+    ### Latent space fplot
+
+    def visualize_latent(self, dataset, color=False, limit=5000, savefig="latent_space.pdf"):
+        
+        """
+        Collects latent means (mu) from the encoder and visualizes them with TSNE.
+        Works for both BW and Color datasets.
+        """
         zs = []
-        for i, batch in enumerate(dataset):
-            if i * batch.shape[0] > limit:
-                break
+        n = 0
+    
+        for batch in dataset:
             _, mu, log_var = self.call(batch, color=color)
             zs.append(mu.numpy())
-
-        Z = np.concatenate(zs, axis=0)
-        Z2 = TSNE(n_components=2, learning_rate="auto").fit_transform(Z)
-
+            n += mu.shape[0]
+            if n >= limit:
+                break
+    
+        Z = np.concatenate(zs, axis=0)[:limit]
+    
+        print(f"[LATENT] Running TSNE on {Z.shape[0]} samples...")
+        Z2 = TSNE(n_components=2, init="random", learning_rate="auto").fit_transform(Z)
+    
         plt.figure(figsize=(8, 6))
-        plt.scatter(Z2[:, 0], Z2[:, 1], s=6, alpha=0.6)
+        plt.scatter(Z2[:, 0], Z2[:, 1], s=4, alpha=0.6)
         plt.title("Latent Space Visualization (TSNE)")
         plt.savefig(savefig)
         plt.close()
-        print(f"Latent space saved to {savefig}")
+        print(f"[LATENT] Saved latent visualization to {savefig}")
+
+
+
+
+
 
    # image gird plot
     def plot_grid(self, images, N=10, C=10, figsize=(18, 18), name="generated"):

@@ -38,14 +38,14 @@ class Decoder(layers.Layer, BiCoder):
             super().__init__()
 
             #  Define the MLP decoder ONCE
-             self.decoder_mlp = Sequential([
+            self.decoder_mlp = Sequential([
                      layers.InputLayer(input_shape=(BiCoder._latentDimensionBlackWhite,)),
                      layers.Dense(BiCoder._unitsBlackWhite, activation=BiCoder._activation),
                      layers.Dense(self._outputDimensionBlackWhite),
              ])
 
         # Define the CNN decoder ONCE
-             self.decoder_cnn = Sequential([
+            self.decoder_cnn = Sequential([
                      layers.InputLayer(input_shape=(BiCoder._latentDimensionColor,)),
                      layers.Dense(units=self._unitsColor, activation=BiCoder._activation),
                      layers.Reshape(target_shape=self._targetShapeColor),

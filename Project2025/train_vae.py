@@ -2,6 +2,7 @@ import argparse
 from dataloader import DataLoader
 from vae import VAE
 import tensorflow as tf
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dset", type=str, default="mnist_bw")
@@ -32,6 +33,7 @@ if args.visualize_latent:
 # Generation from prior
 if args.generate_from_prior:
     imgs = model.generate_from_prior(color=(args.dset=="mnist_color"))
+    print(np.min(imgs), np.max(imgs))
     model.plot_grid(imgs, name="generated_prior")
 
 # Generation from posterior

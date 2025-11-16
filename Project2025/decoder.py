@@ -41,7 +41,7 @@ class Decoder(layers.Layer, BiCoder):
             self.decoder_mlp = Sequential([
                      layers.InputLayer(input_shape=(BiCoder._latentDimensionBlackWhite,)),
                      layers.Dense(BiCoder._unitsBlackWhite, activation=BiCoder._activation),
-                     layers.Dense(self._outputDimensionBlackWhite),
+                     layers.Dense(self._outputDimensionBlackWhite, activation = "sigmoid")
              ])
 
         # Define the CNN decoder ONCE
@@ -69,7 +69,7 @@ class Decoder(layers.Layer, BiCoder):
                              strides=BiCoder._stridesColor,
                              padding=BiCoder._paddingColor,
                              output_padding=1),
-                     layers.Activation("linear", dtype="float32"),
+                     layers.Activation("sigmoid", dtype="float32"),
         ])
         
    

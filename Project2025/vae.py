@@ -98,23 +98,23 @@ class VAE(tf.keras.Model):
    # image gird plot
     def plot_grid(self, images, N=10, C=10, figsize=(18,18), name="generated"):
     # Just in case images were not converted yet
-    if images.dtype != np.uint8:
-        images = tf.clip_by_value(255 * images, 0, 255).numpy().astype(np.uint8)
-
-    fig = plt.figure(figsize=figsize)
-    grid = ImageGrid(fig, 111, nrows_ncols=(N, C), axes_pad=0)
-
-    for ax, im in zip(grid, images):
-        if im.ndim == 2:   # grayscale
-            ax.imshow(im, cmap="gray")
-        else:              # color
-            ax.imshow(im)
-        ax.set_xticks([])
-        ax.set_yticks([])
-
-    plt.savefig(f"{name}.pdf")
-    plt.close()
-    print(f"Saved: {name}.pdf")
+        if images.dtype != np.uint8:
+            images = tf.clip_by_value(255 * images, 0, 255).numpy().astype(np.uint8)
+    
+        fig = plt.figure(figsize=figsize)
+        grid = ImageGrid(fig, 111, nrows_ncols=(N, C), axes_pad=0)
+    
+        for ax, im in zip(grid, images):
+            if im.ndim == 2:   # grayscale
+                ax.imshow(im, cmap="gray")
+            else:              # color
+                ax.imshow(im)
+            ax.set_xticks([])
+            ax.set_yticks([])
+    
+        plt.savefig(f"{name}.pdf")
+        plt.close()
+        print(f"Saved: {name}.pdf")
 
 
     # generate from prio plot

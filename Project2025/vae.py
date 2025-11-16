@@ -145,14 +145,22 @@ class VAE(tf.keras.Model):
     
         return images
 
-    # generate from posterior
     def generate_from_posterior(self, dataset, n=100, color=False):
-        batch = next(iter(dataset))  # take first batch
-        xhat, mu, log_var = self.call(batch, color=color)
-
-        eps = tf.random.normal(tf.shape(mu))
-        z = mu + tf.exp(0.5 * log_var) * eps
-
-        xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
-        images = tf.clip_by_value(255 * xhat, 0, 255).numpy().astype(np.uint8)
+        images = []
+        
+        for batch in dataset:
+            xhat, mu, log_var = self.call(batch, color=color)
+    
+            eps = tf.random.normal(tf.shape(mu))
+            z = mu + tf.exp(0.5 * log_var) * eps
+    
+            xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
+            batch_imgs = tf.clip_by_value(255 * xhat, 0, 255).numpy().astype(np.uint8)
+    
+            images.append(batch_imgs)
+    
+            if sum(len(b) for b in images) >= n:
+                break
+    
+        images = np.concatenate(images, axis=0)[:n]
         return images

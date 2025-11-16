@@ -18,7 +18,6 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 tfd = tfp.distributions
 from tensorflow.keras import layers
-from tensorflow.keras import activations
 from tensorflow.keras.models import Sequential
 from bicoder import BiCoder
 
@@ -81,15 +80,10 @@ class Encoder(layers.Layer, BiCoder):
     #  Generates 10,000 samples as in Monte Carlo methods
     #  @return prior z from and isotropic Gaussian distribution N(0,I)
     #  
-    def getEncoderIsotropic(self):
-        _loc                         = [0.0, 0.5]
-        _variance                    = 1.0
-        _dimensions                  = 2
-        _covarianceMatrix            = tf.eye(_dimensions)  * _variance
-        _scaleLowerTriangular        = tf.linalg.cholesky(_covarianceMatrix)
-        _isotropicNormalDistribution = tfd.MultivariateNormalTriL(loc = _loc,
-                                                                  scale_tril = _scaleLowerTriangular)
-        return isotropicNormalDistribution.sample(10_000)
+    def getEncoderIsotropic(self, latent_dim, n=1):
+        """Sample z ~ N(0, I) with shape (n, latent_dim)."""
+        return tf.random.normal(shape=(n, latent_dim), dtype=tf.float32)
+
 
     ## Generates the encoder z for black and white images
     #  Gaussian encoder for vectorized images
@@ -99,10 +93,10 @@ class Encoder(layers.Layer, BiCoder):
     #  @return output parameters (Gaussian distribution) of the MLP model now converted to z
     #
     def getEncoderMLP(self, x):
-        output = self.encoder_mlp(x)
-        latent_dim = BiCoder._latentDimensionBlackWhite
-        mu = output[:, :latent_dim]
-        log_var = output[:, latent_dim:]
+        output   = self.encoder_mlp(x)
+        L        = BiCoder._latentDimensionBlackWhite
+        mu       = output[:, :L]
+        log_var  = output[:, L:]
         return mu, log_var
 
 
@@ -113,8 +107,8 @@ class Encoder(layers.Layer, BiCoder):
     #  @return output parameters (Gaussian distribution) of convolutional neural network model now transformed to z
     #
     def getEncoderCNN(self, x):
-        output = self.encoder_cnn(x)
-        latent_dim = BiCoder._latentDimensionColor
-        mu = output[:, :latent_dim]
-        log_var = output[:, latent_dim:]
+        output   = self.encoder_cnn(x)
+        L        = BiCoder._latentDimensionColor
+        mu       = output[:, :L]
+        log_var  = output[:, L:]
         return mu, log_var

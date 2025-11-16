@@ -50,7 +50,7 @@ class BiCoder:
     def _calculateZPosteriorDistribution(output, latentDimension):
         _mean              = output[:, :latentDimension]
         _logVariance       = output[:, latentDimension:]
-        _standardDeviation = tf.math.exp(1 / 2 * logVariance)
+        _standardDeviation = tf.math.exp(1 / 2 * _logVariance)
         _epsilon           = tf.random.normal(_mean.shape)
         return _mean + _standardDeviation*_epsilon
 

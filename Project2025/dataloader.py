@@ -38,7 +38,7 @@ class DataLoader():
     ## Initializes constructor of the class
     #  Here we know that data could be different
     def __init__(self, datasetName):
-        datasetName = ""
+        self.datasetName = datasetName
 
     ## Downloads data from urls directly in our current directory
     #  @param mnist_bw or mnist_color depending on black and white or color dataset choice
@@ -46,6 +46,7 @@ class DataLoader():
     #
     def downloadData(self, datasetName):
         if datasetName == "mnist_bw":
+
             _downloadTrain  = subprocess.run(["wget", "-O", "mnist_bw.npy", self.urlTrainBlackWhite])
            #_downloadLabels = subprocess.run(["wget", "-O", "mnist_bw_y_te.npy" ,self.urlLabelsBlackWhite])
             result = "Successful"

@@ -51,7 +51,7 @@ class Decoder(layers.Layer, BiCoder):
                                    [
                                    layers.InputLayer(input_shape = BiCoder._latentDimensionBlackWhite),
                                    layers.Dense(BiCoder._unitsBlackWhite, activation = BiCoder._activation),
-                                   layers.Dense(_outputDimensionBlackWhite)
+                                   layers.Dense(self._outputDimensionBlackWhite)
                                    ]
                                    )
             return BiCoder._calculateXhatPosteriorDistribution( _decoderMLP(dataZ))
@@ -67,8 +67,8 @@ class Decoder(layers.Layer, BiCoder):
             _decoderCNN = Sequential(
                                     [
                                     layers.InputLayer(input_shape = BiCoder._latentDimensionColor),
-                                    layers.Dense(units = _unitsColor, activation = BiCoder._activation),
-                                    layers.Reshape(target_shape = _targetShapeColor),
+                                    layers.Dense(units = self._unitsColor, activation = BiCoder._activation),
+                                    layers.Reshape(target_shape = self._targetShapeColor),
                                     layers.Conv2DTranspose(
                                         filters        = 2 * BiCoder._filtersColor,
                                         kernel_size    = BiCoder._kernelSizeColor,
@@ -84,7 +84,7 @@ class Decoder(layers.Layer, BiCoder):
                                         output_padding = 1,
                                         activation     = BiCoder._activation),
                                     layers.Conv2DTranspose(
-                                        filters        = _channelOutputColor,
+                                        filters        = self._channelOutputColor,
                                         kernel_size    = BiCoder._kernelSizeColor,
                                         strides        = BiCoder._stridesColor,
                                         padding        = BiCoder._paddingColor,

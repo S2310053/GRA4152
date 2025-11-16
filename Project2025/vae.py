@@ -42,25 +42,28 @@ class VAE(tf.keras.Model):
     #  @returns new images (xhat) depending the data methods
     #
     def call(self, x = None,  priorIsotropic = False, color = False):
-
         if priorIsotropic:
             z = self.encoder.getEncoderIsotropic()
             xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
             return xhat
-       
         if color:
-            output, latentDimension = self.encoder.getEncoder(x)
-            z                       = BiCoder._calculateZPosteriorDistribution(output, latentDimension)
-            xhat                    = self.decoder.getDecoderCNN(z)
+            mu, log_var = self.encoder.getEncoderCNN(x)
+            latent_dim = BiCoder._latentDimensionColor
         else:
-            output, latentDimension = self.encoder.getEncoderMLP(x)
-            z                       = BiCoder._calculateZPosteriorDistribution(output, latentDimension)
-            xhat                    = self.decoder.getDecoderMLP(z)
-           
-        mean        = output[:, :latentDimension] 
-        logVariance =output[:, latentDimension:]
-       
-        return xhat, mean, logVariance #log σ² = 2 log σ.
+            mu, log_var = self.encoder.getEncoderMLP(x)
+            latent_dim = BiCoder._latentDimensionBlackWhite
+            # Reparameterization trick
+            eps = tf.random.normal(shape=tf.shape(mu))
+            z = mu + tf.exp(0.5 * log_var) * eps
+            xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
+            recon_loss = tf.reduce_mean(tf.square(x - xhat))
+            # KL divergence
+            kl_loss = 0.5 * tf.reduce_mean(tf.reduce_sum(tf.square(mu) + tf.exp(log_var) - log_var - 1, axis=1))
+            # Store total loss as attribute
+            self.vae_loss = recon_loss + kl_loss
+
+            return xhat
+
 
    ## Creates a helper function to computes the log function
    #  The objective function of our model by two components
@@ -102,16 +105,13 @@ class VAE(tf.keras.Model):
     #          all optimizers always minimize so the expression becomes negative
     #
     @tf.function
-    def train(self,x, optimizer):
-       
+    def train(self, x, optimizer):
         with tf.GradientTape() as tape:
-            xhat, mu, log_var = self.call(x)
-            self.vae_loss     = self.lossFunction(x, xhat, mu, log_var)
-            gradients         = tape.gradients(self.vae_loss,self.trainable_variables)
-            optimizer.apply_gradients(zip(gradients, self.trainable_variables))
-
-            return loss
-
+            loss = self.call(x)          # xhat computed, loss stored
+            loss = self.vae_loss         # retrieve full ELBO loss
+        gradients = tape.gradient(loss, self.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+        return loss
     ## Generates and visualizes latent space z
     #  @param latent space z generated in encoder
     #  @return scatter plot

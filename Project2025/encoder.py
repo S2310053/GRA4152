@@ -55,7 +55,7 @@ class Encoder(layers.Layer, BiCoder):
         _covarianceMatrix            = tf.eye(_dimensions)  * _variance
         _scaleLowerTriangular        = tf.linalg.cholesky(_covarianceMatrix)
         _isotropicNormalDistribution = tfd.MultivariateNormalTriL(loc = _loc,
-                                                                  scale_tril = scaleLowerTriangular)
+                                                                  scale_tril = _scaleLowerTriangular)
         return isotropicNormalDistribution.sample(10_000)
 
     ## Generates the encoder z for black and white images
@@ -66,6 +66,7 @@ class Encoder(layers.Layer, BiCoder):
     #  @return output parameters (Gaussian distribution) of the MLP model now converted to z
     #
     def getEncoderMLP(self, data):
+        data = tf.reshape(data, (-1, 28 * 28))##
         _encoderMLP = Sequential(
                                [
                                layers.InputLayer(input_shape =self._inputShapeBlackWhite),
@@ -73,7 +74,11 @@ class Encoder(layers.Layer, BiCoder):
                                layers.Dense(2 * BiCoder._latentDimensionBlackWhite)
                                ]
                                )
-        return BiCoder._calculateZPosteriorDistribution( _encoderMLP(data), BiCoder._latentDimensionBlackWhite)
+        output = _encoderMLP(data)
+        latent_dim = BiCoder._latentDimensionBlackWhite
+        mu = output[:, :latent_dim]
+        log_var = output[:, latent_dim:]
+        return mu, log_var
 
 
     ## Generate the encoder z for the color images

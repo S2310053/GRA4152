@@ -35,18 +35,17 @@ class Decoder(layers.Layer, BiCoder):
         ## Initialize class and set default parameters
         #  Always initialize for best practice
         def __init__(self):
-            supper().__init__()
+            super().__init__()
    
         ## Generate the decoder xhat for black and white images
         #  Gaussian decoder for vectorized images
         #  MLP models with one hidden layer
-        #  @decorator BiCoder._calculateXhatPosteriorDistribution
+        #  recall BiCoder._calculateXhatPosteriorDistribution
         #             transform data with equation used 
         #             to get x from posterior distribution
         #  @param     dataZ (black and white images) from encoder
         #  @return    mean (Gaussian distribution) of the MLP model
         #
-        @BiCoder._calculateXhatPosteriorDistribution
         def getDecoderMLP(self,dataZ):
             _decoderMLP = Sequential(
                                    [
@@ -55,16 +54,15 @@ class Decoder(layers.Layer, BiCoder):
                                    layers.Dense(_outputDimensionBlackWhite)
                                    ]
                                    )
-            return _decoderMLP(dataZ)
+            return BiCoder._calculateXhatPosteriorDistribution( _decoderMLP(dataZ))
 
         ## Generate the decoder z for the color images
         #  Convolutional neural network decoder
-        #  @decorator BiCoder._calculateXPosteriorDistribution transform 
+        #  @recall BiCoder._calculateXhatPosteriorDistribution transform 
         #             output with equation x from posterior distribution
         #  @param     dataZ (color images) from encoder
         #  @return    mean (Gaussian distribution) of convolutional neural network model
         #
-        @BiCoder._calculateXhatPosteriorDistribution
         def getDecoderCNN(self, dataZ):
             _decoderCNN = Sequential(
                                     [
@@ -94,4 +92,4 @@ class Decoder(layers.Layer, BiCoder):
                                     layers.Activation("linear", dtype = "float32"),
                                     ]
                                     )
-            return _decoderCNN(dataZ)
+            return BiCoder._calculateXhatPosteriorDistribution(_decoderCNN(dataZ))

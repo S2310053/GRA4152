@@ -62,6 +62,6 @@ class BiCoder(layers.Layer):
     @staticmethod
     def _calculateXhatPosteriorDistribution(mean, standardDeviation = 0.75):
        _mean              = mean
-       _standardDeviation = StandardDeviation
+       _standardDeviation = standardDeviation
        _epsilon           = tf.random.normal(_mean.shape)
        return _mean + _standardDeviation*_epsilon

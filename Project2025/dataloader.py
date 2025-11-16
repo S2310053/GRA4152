@@ -44,15 +44,15 @@ class DataLoader():
     #  @param mnist_bw or mnist_color depending on black and white or color dataset choice
     #  return confirmation of downloading or assertion of files already in directroy
     #
-    def downloadData(self, datasetName)
+    def downloadData(self, datasetName):
         if datasetName == "mnist_bw":
-            _downloadTrain  = subprocess.run(["wget", "-O", "mnist_bw.npy"        , urlTrainBlackWhite])
-            _downloadLabels = subprocess.run(["wget", "-O", "mnist_bw_y_te.npy"   , urlLabelsBlackWhite])
+            _downloadTrain  = subprocess.run(["wget", "-O", "mnist_bw.npy", self.urlTrainBlackWhite])
+           #_downloadLabels = subprocess.run(["wget", "-O", "mnist_bw_y_te.npy" ,self.urlLabelsBlackWhite])
             result = "Successful"
 
         elif datasetName == "mnist_color":
-            _downloadTrain  = subprocess.run(["wget", "-O", "mnist_color.pkl"     , urlTrainColor])
-            _downloadLabels = subprocess.run(["wget", "-O", "mnist_color_y_te.npy", urlLabelsColor]) 
+            _downloadTrain  = subprocess.run(["wget", "-O", "mnist_color.pkl" , self.urlTrainColor])
+            #_downloadLabels = subprocess.run(["wget", "-O", "mnist_color_y_te.npy", self.urlLabelsColor]) 
             result = "Successful"
         else:
             result = "Not a valid dataset"
@@ -70,21 +70,21 @@ class DataLoader():
     def loadData(self, datasetName, keyColor = "m0"):
         if datasetName == "mnist_bw":
             _rawDataTrain = np.load("mnist_bw.npy")
-            _labels       = np.load("mnist_bw_y_te.npy")
-            _dataTrain    = (rawData.astype("float32") / 255).reshape(60_000, 28 * 28)
-            data          = trf.data.Dataset.from_tensor_slices((_dataTrain, _labels))
+           # _labels       = np.load("mnist_bw_y_te.npy")
+            _dataTrain    = (_rawDataTrain.astype("float32") / 255).reshape(60_000, 28 * 28)
+            data          = tf.data.Dataset.from_tensor_slices(_dataTrain)
 
         elif datasetName == "mnist_color":
-            _labels       = np.load("mnist_color_y_te.npy")
+           # _labels       = np.load("mnist_color_y_te.npy")
             with open("mnist_color.pkl", "rb") as file:
-                _rawDataTrain = pickle.load(f)
-             _dataTrain   = np.array(_rawDataTrain[keyColor], dtype = "float32")
-             data         = trf.data.Dataset.from_tensor_slices((_dataTrain, _labels))
+                _rawDataTrain = pickle.load(file)
+            _dataTrain   = np.array(_rawDataTrain[keyColor], dtype = "float32")
+            data         = tf.data.Dataset.from_tensor_slices(_dataTrain)
        
-       return data
+        return data
 
 
 # Test class
-mydata = DataLoader()
-download = mydata.DownloadData("mnist_bw")
-data     = mydata.loadData("mnist_bw")
+mydata = DataLoader("mnist_color")
+#download = mydata.downloadData("mnist_color")
+data     = mydata.loadData("mnist_color")

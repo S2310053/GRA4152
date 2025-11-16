@@ -38,7 +38,7 @@ class Encoder(layers.Layer, BiCoder):
     ## Defines the constructor and set default values, they are static
     #  Always initialize for best practice
     def __init__(self):
-        supper.().__init__()
+        super.().__init__()
 
     ## Computes the z encoder value from a prior p(z) distribution
     #  loc as mean value for the first dimension and second dimension
@@ -54,18 +54,17 @@ class Encoder(layers.Layer, BiCoder):
         _dimensions                  = 2
         _covarianceMatrix            = tf.eye(_dimensions)  * _variance
         _scaleLowerTriangular        = tf.linalg.cholesky(_covarianceMatrix)
-        _isotropicNormalDistribution = tfd.MultivariateNormalTriL(loc = loc,
+        _isotropicNormalDistribution = tfd.MultivariateNormalTriL(loc = _loc,
                                                                   scale_tril = scaleLowerTriangular)
         return isotropicNormalDistribution.sample(10_000)
 
     ## Generates the encoder z for black and white images
     #  Gaussian encoder for vectorized images
     #  MLP models with one hidden layer
-    #  @decorator BiCoder._calculateZPosteriorDistribution transform data with equation used to get z from posterior distribution
+    #  @recall BiCoder._calculateZPosteriorDistribution transform data with equation used to get z from posterior distribution
     #  @param data x (black and white images) from the dataset
-    #  @return output parameters (Gaussian distribution) of the MLP model
+    #  @return output parameters (Gaussian distribution) of the MLP model now converted to z
     #
-    @BiCoder._calculateZPosteriorDistribution
     def getEncoderMLP(self, data):
        _encoderMLP = Sequential(
                                [
@@ -74,16 +73,15 @@ class Encoder(layers.Layer, BiCoder):
                                layers.Dense(2 * BiCoder_latentDimensionBlackWhite)
                                ]
                                )
-        return _encoderMLP(data), BiCoder._latentDimensionBlackWhite
+        return BiCoder._calculateZPosteriorDistribution( _encoderMLP(data), BiCoder._latentDimensionBlackWhite)
 
 
     ## Generate the encoder z for the color images
     #  Convolutional neural network encoder
-    #  @decorator BiCoder._calculateZPosteriorDistribution transform output with equation z from posterior distribution
+    #  @recall BiCoder._calculateZPosteriorDistribution transform output with equation z from posterior distribution
     #  @param data x (color images)
-    #  @return output parameters (Gaussian distribution) of convolutional neural network model
+    #  @return output parameters (Gaussian distribution) of convolutional neural network model now transformed to z
     #
-    @BiCoder._calculateZPosteriorDistribution
     def getEncoderCNN(self, data):
         _encoderCNN = Sequential(
                                 [
@@ -110,4 +108,4 @@ class Encoder(layers.Layer, BiCoder):
                                 layers.Dense(2 * BiCoder._latentDimensionColor)
                                 ]
                                 )
-        return _encoderCNN(data), BiCoder._latentDimensionColor
+        return BiCoder._calculateZPosteriorDistribution(_encoderCNN(data), BiCoder._latentDimensionColor)

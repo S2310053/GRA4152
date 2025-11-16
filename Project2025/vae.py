@@ -17,6 +17,8 @@ import tensorflow as tf
 from sklearn.manifold import TSNE
 import mathplotlib.pyplot as plt
 from mlp_toolkits.axes_grid1 import ImageGrid
+from encoder import Encoder
+from decoder import Decoder
 
 ## Variational Autoencoders are models in generative artificial intelligence
 #  They combine deep learning and probabilistic modeling
@@ -26,16 +28,23 @@ class VAE(tf):
     ## Train method to update VAE trainable parameters
     #  @param x our train data set (black and white or colored images)
     #  @param optimizer adam to improve efficiency in convergence
-    #  @return loss as an accuracy measure of the model
+    #  @return loss as an accuracy measure of the model from the objective function
+    #          all optimizers always minimize so the expression becomes negative
     #
     @tf.function
     def train(self,x, optimizer):
+        with tf.GradientTape() as tape:
+            loss      = self.call(x)
+            gradients = tape.gradients(self.vae_loss,self.trainable_variables)
+            optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+
+            return loss
 
     ## Generates and visualizes latent space z
     #  @param latent space z generated in encoder
     #  @return scatter plot
     #
-    #def visualizeLatent(self, visualize = True):
+    def visualizeLatent(self, data):
 
     ## Generates new images
     #  @ param xhat predicted value generated in decoder

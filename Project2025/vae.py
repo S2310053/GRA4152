@@ -17,96 +17,60 @@ class VAE(tf.keras.Model):
         self.encoder = Encoder()
         self.decoder = Decoder()
 
-    def call(self, x=None, priorIsotropic=False, color=False):
+    def call(self, x, color=False):
         """
         Forward pass of the VAE.
-        - If priorIsotropic=True: sample z ~ N(0, I) and decode (generation mode).
-        - Else: encode x -> (mu, log_var), sample z, decode, and compute ELBO loss.
+        Returns x̂, μ, log σ²
         """
-
-        # --- PURE GENERATION FROM PRIOR ---
-        if priorIsotropic:
-            latent_dim = BiCoder._latentDimensionColor if color else BiCoder._latentDimensionBlackWhite
-
-            # if x is provided, match batch size, otherwise use n=1
-            if x is not None:
-                batch_size = tf.shape(x)[0]
-            else:
-                batch_size = 1
-
-            z = self.encoder.getEncoderIsotropic(latent_dim, n=batch_size)
-            xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
-            # no loss in pure generation mode
-            return xhat
-
-        # --- ENCODE ---
         if color:
-            mu, log_var = self.encoder.getEncoderCNN(x)   # (batch, 50)
+            mu, log_var = self.encoder.getEncoderCNN(x)
         else:
-            mu, log_var = self.encoder.getEncoderMLP(x)   # (batch, 20)
+            mu, log_var = self.encoder.getEncoderMLP(x)
 
-        # --- REPARAMETERIZATION TRICK: z = mu + sigma * eps ---
         eps = tf.random.normal(shape=tf.shape(mu))
         z   = mu + tf.exp(0.5 * log_var) * eps
 
-        # --- DECODE ---
         xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
-
-        # --- RECONSTRUCTION LOSS (MSE) ---
-        recon_loss = tf.reduce_mean(tf.square(x - xhat))
-
-        # --- KL DIVERGENCE ---
-        kl_loss = 0.5 * tf.reduce_mean(
-            tf.reduce_sum(tf.square(mu) + tf.exp(log_var) - log_var - 1, axis=1)
-        )
-
-        # store total loss (negative ELBO)
-        self.vae_loss = recon_loss + kl_loss
-
-        return xhat
-
-    # -------- Optional: helper formulas for Gaussian log-likelihood and KL --------
-    @staticmethod
-    def log_diag_mvn(x, mu, log_var):
-        """
-        Log density of a diagonal multivariate normal N(mu, diag(exp(log_var))).
-        """
-        sum_axes = tf.range(1, tf.rank(mu))
-        k        = tf.cast(tf.reduce_prod(tf.shape(mu)[1:]), x.dtype)
-        logp     = -0.5 * k * tf.math.log(2.0 * np.pi) \
-                   - 0.5 * tf.reduce_sum(log_var, axis=sum_axes) \
-                   - 0.5 * tf.reduce_sum(tf.square(x - mu) / tf.exp(log_var), axis=sum_axes)
-        return logp
+        return xhat, mu, log_var
 
     @staticmethod
     def kl_divergence(mu, log_var):
         """
-        KL divergence between q(z|x) = N(mu, diag(exp(log_var))) and p(z) = N(0, I).
+        KL(q(z|x) || p(z)) for diagonal Gaussian.
         """
-        return 0.5 * tf.reduce_sum(tf.square(mu) + tf.exp(log_var) - log_var - 1, axis=1)
+        return 0.5 * tf.reduce_sum(
+            tf.square(mu) + tf.exp(log_var) - log_var - 1,
+            axis=1
+        )
 
-    def lossFunction(self, x, xhat, mu, log_var):
+    @staticmethod
+    def recon_log_likelihood(x, xhat, sigma2=1.0):
         """
-        Alternative loss using the exact Gaussian log-likelihood (negative ELBO).
-        Not used in train(), but kept for reference.
+        Gaussian log-likelihood log p(x|z)
         """
-        recon_loss = -tf.reduce_mean(self.log_diag_mvn(x, xhat, log_var))
-        kl_loss    = tf.reduce_mean(self.kl_divergence(mu, log_var))
-        total_loss = recon_loss + kl_loss
-        return total_loss
+        return -0.5 * tf.reduce_sum(
+            (x - xhat)**2 / sigma2 + tf.math.log(2.0 * np.pi * sigma2),
+            axis=1
+        )
+
+    def elbo_loss(self, x, xhat, mu, log_var):
+        """
+        Computes the NEGATIVE ELBO:
+        L = - E_q[ log p(x|z) ] + KL(q||p)
+        """
+        log_px_z = self.recon_log_likelihood(x, xhat)
+        kl = self.kl_divergence(mu, log_var)
+        return tf.reduce_mean(-log_px_z + kl)  # negative ELBO
 
     @tf.function
-    def train(self, x, optimizer, color=False):
+    def train_step(self, x, optimizer, color=False):
         """
-        One training step: forward + backward.
+        Single gradient update step that explicitly optimizes Negative ELBO.
         """
         with tf.GradientTape() as tape:
-            # Forward pass: computes xhat and stores self.vae_loss
-            self.call(x, color=color)
-            loss = self.vae_loss
+            xhat, mu, log_var = self.call(x, color=color)
+            loss = self.elbo_loss(x, xhat, mu, log_var)
 
-        gradients = tape.gradient(loss, self.trainable_variables)
-        optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+        grads = tape.gradient(loss, self.trainable_variables)
+        optimizer.apply_gradients(zip(grads, self.trainable_variables))
         return loss
-
-

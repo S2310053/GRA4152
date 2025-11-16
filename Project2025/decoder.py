@@ -9,6 +9,7 @@
 #  @module activations from tensorflow.keras adds non-linearity to model
 #  @module Sequential from tensorflow.keras stacks layers
 #  @module BiCoder retrieves general formulas for z(decoder) and xhat(decoder)
+import numpy as np
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" 
 from tensorflow.keras import layers
@@ -32,8 +33,9 @@ class Decoder(layers.Layer, BiCoder):
         _unitsColor         = np.prod(_targetShapeColor)
 
         ## Initialize class and set default parameters
-        #
+        #  Always initialize for best practice
         def __init__(self):
+            supper().__init__()
    
         ## Generate the decoder xhat for black and white images
         #  Gaussian decoder for vectorized images
@@ -41,20 +43,55 @@ class Decoder(layers.Layer, BiCoder):
         #  @decorator BiCoder._calculateXhatPosteriorDistribution
         #             transform data with equation used 
         #             to get x from posterior distribution
-        #  @param     data x (black and white images) from encoder
+        #  @param     dataZ (black and white images) from encoder
         #  @return    mean (Gaussian distribution) of the MLP model
         #
         @BiCoder._calculateXhatPosteriorDistribution
-        def getDecoderMLP(self,newdata):
-
+        def getDecoderMLP(self,dataZ):
+            _decoderMLP = Sequential(
+                                   [
+                                   layers.InputLayer(input_shape = BiCoder._latentDimensionBlackWhite),
+                                   layers.Dense(BiCoder._unitsBlackWhite, activation = BiCoder._activation),
+                                   layers.Dense(_outputDimensionBlackWhite)
+                                   ]
+                                   )
+            return _decoderMLP(dataZ)
 
         ## Generate the decoder z for the color images
         #  Convolutional neural network decoder
         #  @decorator BiCoder._calculateXPosteriorDistribution transform 
         #             output with equation x from posterior distribution
-        #  @param     data x (color images) from encoder
+        #  @param     dataZ (color images) from encoder
         #  @return    mean (Gaussian distribution) of convolutional neural network model
         #
         @BiCoder._calculateXhatPosteriorDistribution
-        def getDecoderCNN(self, newdata):
-
+        def getDecoderCNN(self, dataZ):
+            _decoderCNN = Sequential(
+                                    [
+                                    layers.InputLayer(input_shape = BiCoder._latentDimensionColor),
+                                    layers.Dense(units = _unitsColor, activation = BiCoder._activation),
+                                    layers.Reshape(target_shape = _targetShapeColor),
+                                    layers.Conv2DTranspose(
+                                        filters        = 2 * BiCoder._filtersColor,
+                                        kernel_size    = BiCoder._kernelSizeColor,
+                                        strides        = BiCoder._stridesColor,
+                                        padding        = BiCoder._paddingColor,
+                                        output_padding = 0,
+                                        activation     = BiCoder._activation),
+                                    layers.Conv2DTranspose(
+                                        filters        = BiCoder._filtersColor,
+                                        kernel_size    = BiCoder._kernelSizeColor,
+                                        strides        = BiCoder._stridesColor,
+                                        padding        = BiCoder._paddingColor,
+                                        output_padding = 1,
+                                        activation     = BiCoder._activation)
+                                    layers.Conv2DTranspose(
+                                        filters        = _channelOutputColor,
+                                        kernel_size    = BiCoder._kernelSizeColor,
+                                        strides        = BiCoder._stridesColor,
+                                        padding        = BiCoder._paddingColor,
+                                        output_padding = 1)
+                                    layers.Activation("linear", dtype = "float32"),
+                                    ]
+                                    )
+            return _decoderCNN(dataZ)

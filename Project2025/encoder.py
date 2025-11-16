@@ -31,16 +31,14 @@ class Encoder(layers.Layer, BiCoder):
 
     # Parameter specific for the black and white images MLP model encoder
     _inputShapeBlackWhite      = (28 * 28, )
-    _latentDimensionBlackWhite = 20
-    _unitsBlackWhite           = 400
 
     # Parameter specific for the color images convolutional neural network model encoder
     _inputShapeColor           = (28, 28, 3)
-    _latentDimensionColor      = 50 
 
-    ## Defines the constructor and set default values
-    #
+    ## Defines the constructor and set default values, they are static
+    #  Always initialize for best practice
     def __init__(self):
+        supper.().__init__()
 
     ## Computes the z encoder value from a prior p(z) distribution
     #  loc as mean value for the first dimension and second dimension
@@ -72,11 +70,11 @@ class Encoder(layers.Layer, BiCoder):
        _encoderMLP = Sequential(
                                [
                                layers.InputLayer(input_shape = _inputShapeBlackWhite)
-                               layers.Dense(_unitsBlackWhite)
-                               layers.Dense(2 * _latentDimensionBlackWhite)
+                               layers.Dense(BiCoder._unitsBlackWhite)
+                               layers.Dense(2 * BiCoder_latentDimensionBlackWhite)
                                ]
                                )
-        return _encoderMLP(data), _latentDimensionBlackWhite
+        return _encoderMLP(data), BiCoder._latentDimensionBlackWhite
 
 
     ## Generate the encoder z for the color images
@@ -109,7 +107,7 @@ class Encoder(layers.Layer, BiCoder):
                                     activation  = BiCoder._activation,
                                     padding     = BiCoder._paddingColor)
                                 layers.Flatten(),
-                                layers.Dense(2 * _latentDimensionColor)
+                                layers.Dense(2 * BiCoder._latentDimensionColor)
                                 ]
                                 )
-        return _encoderCNN(data), _latentDimensionColor
+        return _encoderCNN(data), BiCoder._latentDimensionColor

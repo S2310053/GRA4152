@@ -23,7 +23,7 @@ from tensorflow.keras.models import Sequential
 #  input to sample new data and get xhat in the decoder
 #  There's a direct mechanism to get this values
 #
-class BiCoder(layers.Layer):
+class BiCoder:
     # Set default parameters that are common in
     # encoder and decoders and we keep them as static variables
 

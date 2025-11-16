@@ -38,7 +38,7 @@ class Encoder(layers.Layer, BiCoder):
     ## Defines the constructor and set default values, they are static
     #  Always initialize for best practice
     def __init__(self):
-        super.().__init__()
+        super().__init__()
 
     ## Computes the z encoder value from a prior p(z) distribution
     #  loc as mean value for the first dimension and second dimension
@@ -66,11 +66,11 @@ class Encoder(layers.Layer, BiCoder):
     #  @return output parameters (Gaussian distribution) of the MLP model now converted to z
     #
     def getEncoderMLP(self, data):
-       _encoderMLP = Sequential(
+        _encoderMLP = Sequential(
                                [
-                               layers.InputLayer(input_shape = _inputShapeBlackWhite)
-                               layers.Dense(BiCoder._unitsBlackWhite)
-                               layers.Dense(2 * BiCoder_latentDimensionBlackWhite)
+                               layers.InputLayer(input_shape =self._inputShapeBlackWhite),
+                               layers.Dense(BiCoder._unitsBlackWhite),
+                               layers.Dense(2 * BiCoder._latentDimensionBlackWhite)
                                ]
                                )
         return BiCoder._calculateZPosteriorDistribution( _encoderMLP(data), BiCoder._latentDimensionBlackWhite)
@@ -103,7 +103,7 @@ class Encoder(layers.Layer, BiCoder):
                                     kernel_size = BiCoder._kernelSizeColor,
                                     strides     = BiCoder._stridesColor,
                                     activation  = BiCoder._activation,
-                                    padding     = BiCoder._paddingColor)
+                                    padding     = BiCoder._paddingColor),
                                 layers.Flatten(),
                                 layers.Dense(2 * BiCoder._latentDimensionColor)
                                 ]

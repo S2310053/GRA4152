@@ -82,13 +82,13 @@ class Decoder(layers.Layer, BiCoder):
                                         strides        = BiCoder._stridesColor,
                                         padding        = BiCoder._paddingColor,
                                         output_padding = 1,
-                                        activation     = BiCoder._activation)
+                                        activation     = BiCoder._activation),
                                     layers.Conv2DTranspose(
                                         filters        = _channelOutputColor,
                                         kernel_size    = BiCoder._kernelSizeColor,
                                         strides        = BiCoder._stridesColor,
                                         padding        = BiCoder._paddingColor,
-                                        output_padding = 1)
+                                        output_padding = 1),
                                     layers.Activation("linear", dtype = "float32"),
                                     ]
                                     )

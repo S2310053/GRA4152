@@ -101,14 +101,19 @@ class VAE(tf.keras.Model):
         if images.dtype != np.uint8:
             images = tf.clip_by_value(255 * images, 0, 255).numpy().astype(np.uint8)
     
-        fig = plt.figure(figsize=figsize)
-        grid = ImageGrid(fig, 111, nrows_ncols=(N, C), axes_pad=0)
-    
         for ax, im in zip(grid, images):
-            if im.ndim == 2:   # grayscale
+            # Handle flatten or (28,28,1)
+            if im.ndim == 1 and im.size == 28 * 28:
+                im = im.reshape(28, 28)
+            elif im.ndim == 3 and im.shape[-1] == 1:
+                im = im.squeeze(-1)
+        
+            # grayscale vs color
+            if im.ndim == 2:
                 ax.imshow(im, cmap="gray")
-            else:              # color
+            else:
                 ax.imshow(im)
+        
             ax.set_xticks([])
             ax.set_yticks([])
     
@@ -122,8 +127,13 @@ class VAE(tf.keras.Model):
         latent_dim = BiCoder._latentDimensionColor if color else BiCoder._latentDimensionBlackWhite
         z = tf.random.normal((n, latent_dim))
         xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
-
+    
         images = tf.clip_by_value(255 * xhat, 0, 255).numpy().astype(np.uint8)
+    
+        # reshape for black & white
+        if not color:
+            images = images.reshape((-1, 28, 28))
+    
         return images
 
     # generate from posterior

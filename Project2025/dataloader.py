@@ -70,21 +70,23 @@ class DataLoader():
     #  
     def loadData(self, datasetName, keyColor="m4"):
         if datasetName == "mnist_bw":
-            _rawDataTrain = np.load("mnist_bw.npy")
-            _dataTrain    = (_rawDataTrain.astype("float32") / 255).reshape(60_000, 28 * 28)
-            data = tf.data.Dataset.from_tensor_slices(_dataTrain).batch(32)
+            _raw = np.load("mnist_bw.npy")  # shape (60000, 784)
+            _data = (_raw.astype("float32") / 255.0).reshape(60_000, 28, 28, 1)
     
         elif datasetName == "mnist_color":
-            with open("mnist_color.pkl", "rb") as file:
-                _rawDataTrain = pickle.load(file)
-            # Concatenate all digit groups so we use the whole dataset
-            _imgs = np.concatenate([_rawDataTrain[keyColor] for k in _rawDataTrain.keys()], axis=0)
-
-            _dataTrain =_imgs.astype("float32")
-            data = tf.data.Dataset.from_tensor_slices(_dataTrain).batch(32)
-        else:
-            raise ValueError(f"Unknown dataset name '{datasetName}'. Use 'mnist_bw' or 'mnist_color'.")
+            import pickle
+            with open("mnist_color.pkl", "rb") as f:
+                raw = pickle.load(f)
     
-        return data
+            if keyColor not in raw:
+                raise ValueError(f"Invalid color key '{keyColor}'. Available: {list(raw.keys())}")
+    
+            _data = raw[keyColor].astype("float32")  # Keep [0,255] scale for linear decoder
+    
+        else:
+            raise ValueError(f"Unknown dataset '{datasetName}'.")
+    
+        return tf.data.Dataset.from_tensor_slices(_data).batch(32)
+
 
 

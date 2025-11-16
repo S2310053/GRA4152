@@ -4,6 +4,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import tensorflow as tf
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 from encoder import Encoder
 from decoder import Decoder
@@ -74,3 +75,57 @@ class VAE(tf.keras.Model):
         grads = tape.gradient(loss, self.trainable_variables)
         optimizer.apply_gradients(zip(grads, self.trainable_variables))
         return loss
+
+    ##### Latent space fplot
+    def visualize_latent(self, dataset, color=False, limit=2000, savefig="latent_space.pdf"):
+        zs = []
+        for i, batch in enumerate(dataset):
+            if i * batch.shape[0] > limit:
+                break
+            _, mu, log_var = self.call(batch, color=color)
+            zs.append(mu.numpy())
+
+        Z = np.concatenate(zs, axis=0)
+        Z2 = TSNE(n_components=2, learning_rate="auto").fit_transform(Z)
+
+        plt.figure(figsize=(8, 6))
+        plt.scatter(Z2[:, 0], Z2[:, 1], s=6, alpha=0.6)
+        plt.title("Latent Space Visualization (TSNE)")
+        plt.savefig(savefig)
+        plt.close()
+        print(f"Latent space saved to {savefig}")
+
+   # image gird plot
+    def plot_grid(self, images, N=10, C=10, figsize=(18, 18), name="generated"):
+        fig = plt.figure(figsize=figsize)
+        grid = ImageGrid(fig, 111, nrows_ncols=(N, C), axes_pad=0)
+
+        for ax, im in zip(grid, images):
+            ax.imshow(im)
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+        plt.savefig(f"{name}.pdf")
+        plt.close()
+        print(f"Image grid saved to {name}.pdf")
+
+   # generate from prio plot
+    def generate_from_prior(self, n=100, color=False):
+        latent_dim = BiCoder._latentDimensionColor if color else BiCoder._latentDimensionBlackWhite
+        z = tf.random.normal((n, latent_dim))
+        xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
+
+        images = tf.clip_by_value(255 * xhat, 0, 255).numpy().astype(np.uint8)
+        return images
+
+    # generate from posterior
+    def generate_from_posterior(self, dataset, n=100, color=False):
+        batch = next(iter(dataset))  # take first batch
+        xhat, mu, log_var = self.call(batch, color=color)
+
+        eps = tf.random.normal(tf.shape(mu))
+        z = mu + tf.exp(0.5 * log_var) * eps
+
+        xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
+        images = tf.clip_by_value(255 * xhat, 0, 255).numpy().astype(np.uint8)
+        return images

@@ -43,36 +43,39 @@ class VAE(tf.keras.Model):
             tf.square(mu) + tf.exp(log_var) - log_var - 1,
             axis= 1)
 
+
     @staticmethod
-    def recon_log_likelihood(x, xhat, sigma2=0.1):
-        """
-        Gaussian log-likelihood log p(x|z)
-        """
+    def recon_log_likelihood(x, xhat, sigma2_bw=1.0, sigma2_color=25.0, color=False):
+        axes = list(range(1, len(x.shape)))
+        sigma2 = sigma2_color if color else sigma2_bw
+    
         return -0.5 * tf.reduce_sum(
             (x - xhat)**2 / sigma2 + tf.math.log(2.0 * np.pi * sigma2),
-            axis= list(range(1,len(x.shape))))
+            axis=axes
+        )
 
-    def elbo_loss(self, x, xhat, mu, log_var):
-        """
-        Computes the NEGATIVE ELBO:
-        L = - E_q[ log p(x|z) ] + KL(q||p)
-        """
-        log_px_z = self.recon_log_likelihood(x, xhat)
+   
+      
+    def elbo_loss(self, x, xhat, mu, log_var, color=False):
+          """
+            Computes the NEGATIVE ELBO:
+            L = - E_q[ log p(x|z) ] + KL(q||p)
+            """
+        log_px_z = self.recon_log_likelihood(x, xhat, color=color)
         kl = self.kl_divergence(mu, log_var)
-        return tf.reduce_mean(-log_px_z + kl)  # negative ELBO
+        return tf.reduce_mean(-log_px_z + kl)
+
 
     @tf.function
     def train(self, x, optimizer, color=False):
-        """
-        Single gradient update step that explicitly optimizes Negative ELBO.
-        """
         with tf.GradientTape() as tape:
             xhat, mu, log_var = self.call(x, color=color)
-            loss = self.elbo_loss(x, xhat, mu, log_var)
-
+            loss = self.elbo_loss(x, xhat, mu, log_var, color=color)
+    
         grads = tape.gradient(loss, self.trainable_variables)
         optimizer.apply_gradients(zip(grads, self.trainable_variables))
         return loss
+
 
     ### Latent space fplot
 
@@ -110,33 +113,20 @@ class VAE(tf.keras.Model):
 
 
    # image gird plot
-    def plot_grid(self, images, N=10, C=10, figsize=(18, 18), name="generated"):
-        """
-        Plot a grid of generated or reconstructed images and save as PDF.
-        Accepts both flattened BW images (784,) and color (28,28,3) tensors.
-        """
-        # Convert to uint8 if still float
-        if images.dtype != np.uint8:
+    def plot_grid(self, images, color=False, N=10, C=10, figsize=(18,18), name="grid"):
+        if not color:  # BW in [0,1] → scale to [0,255]
             images = tf.clip_by_value(255 * images, 0, 255).numpy().astype(np.uint8)
+        else:          # Color already [0,255]
+            images = tf.clip_by_value(images, 0, 255).numpy().astype(np.uint8)
     
         fig = plt.figure(figsize=figsize)
         grid = ImageGrid(fig, 111, nrows_ncols=(N, C), axes_pad=0)
     
         for ax, im in zip(grid, images):
-            # Reshape for grayscale 28x28
-            if im.ndim == 1 and im.size == 28 * 28:
-                im = im.reshape(28, 28)
-    
-            # Handle (28,28,1)
-            if im.ndim == 3 and im.shape[-1] == 1:
-                im = im.squeeze(-1)
-    
-            # Show grayscale or color image
-            if im.ndim == 2:
+            if not color:
                 ax.imshow(im, cmap="gray")
             else:
                 ax.imshow(im)
-    
             ax.set_xticks([])
             ax.set_yticks([])
     
@@ -145,19 +135,15 @@ class VAE(tf.keras.Model):
         print(f"Saved: {name}.pdf")
 
 
+
     # generate from prio plot
     def generate_from_prior(self, n=100, color=False):
         latent_dim = BiCoder._latentDimensionColor if color else BiCoder._latentDimensionBlackWhite
         z = tf.random.normal((n, latent_dim))
         xhat = self.decoder.getDecoderCNN(z) if color else self.decoder.getDecoderMLP(z)
-    
-        images = tf.clip_by_value(255 * xhat, 0, 255).numpy().astype(np.uint8)
-    
-        # reshape for black & white
-        if not color:
-            images = images.reshape((-1, 28, 28))
-    
-        return images
+        return xhat
+
+
 
     def generate_from_posterior(self, dataset, n=100, color=False):
         images = []

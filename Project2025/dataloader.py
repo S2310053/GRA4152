@@ -68,21 +68,23 @@ class DataLoader():
     #  Reshapes the training set (60_000, 784)
     #  If the data set belongs to mnist_color, chooses default dictionary value
     #  
-    def loadData(self, datasetName, keyColor = "m0"):
+    def loadData(self, datasetName, keyColor="m0"):
         if datasetName == "mnist_bw":
             _rawDataTrain = np.load("mnist_bw.npy")
-           # _labels       = np.load("mnist_bw_y_te.npy")
             _dataTrain    = (_rawDataTrain.astype("float32") / 255).reshape(60_000, 28 * 28)
-            data          = tf.data.Dataset.from_tensor_slices(_dataTrain).batch(32)
-
+            data = tf.data.Dataset.from_tensor_slices(_dataTrain).batch(32)
+    
         elif datasetName == "mnist_color":
-           # _labels       = np.load("mnist_color_y_te.npy")
             with open("mnist_color.pkl", "rb") as file:
                 _rawDataTrain = pickle.load(file)
-            _dataTrain   = np.array(_rawDataTrain[keyColor], dtype = "float32")
-            data         = tf.data.Dataset.from_tensor_slices(_dataTrain).batch(32)
-       
+            _dataTrain = np.array(_rawDataTrain[keyColor], dtype="float32") / 255.0
+            data = tf.data.Dataset.from_tensor_slices(_dataTrain).batch(32)
+    
+        else:
+            raise ValueError(f"Unknown dataset name '{datasetName}'. Use 'mnist_bw' or 'mnist_color'.")
+    
         return data
+
 
 
 # Test class

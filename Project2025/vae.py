@@ -64,7 +64,7 @@ class VAE(tf.keras.Model):
         return tf.reduce_mean(-log_px_z + kl)  # negative ELBO
 
     @tf.function
-    def train_step(self, x, optimizer, color=False):
+    def train(self, x, optimizer, color=False):
         """
         Single gradient update step that explicitly optimizes Negative ELBO.
         """

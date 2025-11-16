@@ -41,18 +41,16 @@ class VAE(tf.keras.Model):
         """
         return 0.5 * tf.reduce_sum(
             tf.square(mu) + tf.exp(log_var) - log_var - 1,
-            axis=1
-        )
+            axis= 1)
 
     @staticmethod
-    def recon_log_likelihood(x, xhat, sigma2=1.0):
+    def recon_log_likelihood(x, xhat, sigma2=0.1):
         """
         Gaussian log-likelihood log p(x|z)
         """
         return -0.5 * tf.reduce_sum(
             (x - xhat)**2 / sigma2 + tf.math.log(2.0 * np.pi * sigma2),
-            axis=1
-        )
+            axis= list(range(1,len(x.shape))))
 
     def elbo_loss(self, x, xhat, mu, log_var):
         """

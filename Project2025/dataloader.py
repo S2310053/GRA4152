@@ -78,9 +78,9 @@ class DataLoader():
             with open("mnist_color.pkl", "rb") as file:
                 _rawDataTrain = pickle.load(file)
             # Concatenate all digit groups so we use the whole dataset
-            _imgs = np.concatenate([_rawDataTrain[k] for k in _rawDataTrain.keys()], axis=0)
+            _imgs = np.concatenate([_rawDataTrain[keyColor] for k in _rawDataTrain.keys()], axis=0)
 
-            _dataTrain =_imgs.astype("float32") / 255.0
+            _dataTrain =_imgs.astype("float32")
             data = tf.data.Dataset.from_tensor_slices(_dataTrain).batch(32)
         else:
             raise ValueError(f"Unknown dataset name '{datasetName}'. Use 'mnist_bw' or 'mnist_color'.")

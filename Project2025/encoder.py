@@ -1,114 +1,151 @@
-## 
-#  This module defines the Encoder class 
-#  Contains specific behavior in encoders
+##
+#  This module defines the Encoder class
+#  It provides the probabilistic encoders for both black–white and color MNIST
+#  The encoder maps input x into the latent Gaussian parameters (mu, log_var).
 #
-
-## Load necessary libraries and modules
-#  @library os, os.environ 3 to just include tensorflow error messages
-#  @library tensorflow to generate isotropic p(z) distribution
-#  @library tensorflow_probability to generate isotropic correlation
-#  @module layers from tensorflow.keras reusable when stating weights NN
-#  @module activations from tensorflow.keras adds non-linearity to model
-#  @module Sequential from tensorflow.keras stacks layers
-#  @module BiCoder retrieves general formulas for z(decoder) and xhat(decoder)
+#  Some useful information
+#    - Inheritance: the class derives from keras.Layer to integrate naturally
+#      with TensorFlow’s variable management, and from BiCoder to reuse shared
+#      posterior-distribution formulas.
+#    - Overriding: the constructor extends the parent class by defining the
+#      trainable components necessary for MLP and CNN encoders.
+#    - Polymorphism: different encoder paths (MLP or CNN) are selected based on
+#      the input structure while preserving a unified interface.
 #
+#  @library tensorflow               for tensors and ops
+#  @library tensorflow_probability   for Gaussian prior utilities
+#  @module  layers                   Keras layers
+#  @module  Sequential               sequential model container
+#  @module  BiCoder                  shared latent utilities
+##
 import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" 
-import tensorflow as tf
-import tensorflow_probability as tfp
-tfd = tfp.distributions
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
-from bicoder import BiCoder
+os.environ["TF_CPP_MIN_LOG_LEVEL"]  =  "3"
 
-## Probabilistic encoders take the input of data x and learn a latent
-#  representation z used as input of the generative model p(x|z) (decoder)
+import tensorflow                as tf
+import tensorflow_probability    as tfp
+tfd  =  tfp.distributions
+
+from tensorflow.keras            import layers
+from tensorflow.keras.models     import Sequential
+from bicoder                     import BiCoder
+
+
+##
+#  Encoder maps input images to latent Gaussian parameters.
+#  Two architectures are supported:
+#      - MLP for black–white images
+#      - CNN for color images
 #
 class Encoder(layers.Layer, BiCoder):
-    # Default parameters specific for this class
-    # Set as static variables
 
-    # Parameter specific for the black and white images MLP model encoder
-    _inputShapeBlackWhite      = (28 * 28, )
+    # Input shapes for the two encoder types
+    _inputBW        =  (28 * 28,)
+    _inputColor     =  (28, 28, 3)
 
-    # Parameter specific for the color images convolutional neural network model encoder
-    _inputShapeColor           = (28, 28, 3)
-
-    ## Defines the constructor and set default values, they are static
-    #  Always initialize for best practice
+    ##
+    #  Constructor
+    #
+    #  Overriding:
+    #    - Extends keras.Layer by building internal trainable modules.
+    #
     def __init__(self):
         super().__init__()
-        
-        # Define the black and white encoder once
-        self.encoder_mlp = Sequential([
-            layers.InputLayer(input_shape=self._inputShapeBlackWhite),
-            layers.Dense(BiCoder._unitsBlackWhite, activation=BiCoder._activation),
-            layers.Dense(2 * BiCoder._latentDimensionBlackWhite),
+
+        ##
+        #  Black–white encoder (MLP)
+        self._encoderBW    =  Sequential([
+            layers.InputLayer(input_shape=self._inputBW),
+
+            layers.Dense(
+                BiCoder._unitsBW,
+                activation = BiCoder._activationBW
+            ),
+
+            # Produces concatenated (mu, log_var)
+            layers.Dense(2 * BiCoder._latentDimBW),
         ])
 
-        # Define the color encoder once
-        self.encoder_cnn = Sequential([
-            layers.InputLayer(input_shape=self._inputShapeColor),
+        ##
+        #  Color encoder (CNN)
+        self._encoderColor =  Sequential([
+            layers.InputLayer(input_shape=self._inputColor),
+
             layers.Conv2D(
-                filters=1 * BiCoder._filtersColor,
-                kernel_size=BiCoder._kernelSizeColor,
-                strides=BiCoder._stridesColor,
-                activation=BiCoder._activation,
-                padding=BiCoder._paddingColor),
+                filters     = 1 * BiCoder._filtersColor,
+                kernel_size = BiCoder._kernelColor,
+                strides     = BiCoder._stridesColor,
+                padding     = BiCoder._paddingColor,
+                activation  = BiCoder._activationBW
+            ),
+
             layers.Conv2D(
-                filters=2 * BiCoder._filtersColor,
-                kernel_size=BiCoder._kernelSizeColor,
-                strides=BiCoder._stridesColor,
-                activation=BiCoder._activation,
-                padding=BiCoder._paddingColor),
+                filters     = 2 * BiCoder._filtersColor,
+                kernel_size = BiCoder._kernelColor,
+                strides     = BiCoder._stridesColor,
+                padding     = BiCoder._paddingColor,
+                activation  = BiCoder._activationBW
+            ),
+
             layers.Conv2D(
-                filters=4 * BiCoder._filtersColor,
-                kernel_size=BiCoder._kernelSizeColor,
-                strides=BiCoder._stridesColor,
-                activation=BiCoder._activation,
-                padding=BiCoder._paddingColor),
+                filters     = 4 * BiCoder._filtersColor,
+                kernel_size = BiCoder._kernelColor,
+                strides     = BiCoder._stridesColor,
+                padding     = BiCoder._paddingColor,
+                activation  = BiCoder._activationBW
+            ),
+
             layers.Flatten(),
-            layers.Dense(2 * BiCoder._latentDimensionColor),
+            layers.Dense(2 * BiCoder._latentDimColor),
         ])
-    
-
-    ## Computes the z encoder value from a prior p(z) distribution
-    #  loc as mean value for the first dimension and second dimension
-    #  with a variance 1 property, dimensions 2 property
-    #  and covariance matri has 0 correlation
-    #  Improves efficiency parametrizing by a Cholesky factor of the covariance matrix
-    #  Generates 10,000 samples as in Monte Carlo methods
-    #  @return prior z from and isotropic Gaussian distribution N(0,I)
-    #  
-    def getEncoderIsotropic(self, latent_dim, n=1):
-        """Sample z ~ N(0, I) with shape (n, latent_dim)."""
-        return tf.random.normal(shape=(n, latent_dim), dtype=tf.float32)
 
 
-    ## Generates the encoder z for black and white images
-    #  Gaussian encoder for vectorized images
-    #  MLP models with one hidden layer
-    #  @recall BiCoder._calculateZPosteriorDistribution transform data with equation used to get z from posterior distribution
-    #  @param data x (black and white images) from the dataset
-    #  @return output parameters (Gaussian distribution) of the MLP model now converted to z
+    ##
+    #  Samples from the standard Gaussian prior p(z) = N(0, I).
     #
+    #  @param latentDim integer
+    #  @param n         number of samples
+    #
+    #  @return samples from p(z)
+    def getEncoderIsotropic(self, latentDim, n=1):
+
+        if latentDim <= 0:
+            raise ValueError("Latent dimensionality must be positive.")
+
+        return tf.random.normal(shape=(n, latentDim), dtype=tf.float32)
+
+
+    ##
+    #  Encodes black–white images using the MLP encoder.
+    #
+    #  Polymorphism:
+    #    - One unified interface, different internal behavior depending on data type.
+    #
+    #  @param x tensor of shape (B, 28*28)
+    #  @return  (mu, log_var)
     def getEncoderMLP(self, x):
-        output   = self.encoder_mlp(x)
-        L        = BiCoder._latentDimensionBlackWhite
-        mu       = output[:, :L]
-        log_var  = output[:, L:]
+
+        output    =  self._encoderBW(x)
+        L         =  BiCoder._latentDimBW
+
+        mu        =  output[:, :L]
+        log_var   =  output[:, L:]
+
         return mu, log_var
 
 
-    ## Generate the encoder z for the color images
-    #  Convolutional neural network encoder
-    #  @recall BiCoder._calculateZPosteriorDistribution transform output with equation z from posterior distribution
-    #  @param data x (color images)
-    #  @return output parameters (Gaussian distribution) of convolutional neural network model now transformed to z
+    ##
+    #  Encodes color images using the CNN encoder.
     #
+    #  @param x tensor of shape (B, 28, 28, 3)
+    #  @return  (mu, log_var)
     def getEncoderCNN(self, x):
-        output   = self.encoder_cnn(x)
-        L        = BiCoder._latentDimensionColor
-        mu       = output[:, :L]
-        log_var  = output[:, L:]
+
+        output    =  self._encoderColor(x)
+        L         =  BiCoder._latentDimColor
+
+        mu        =  output[:, :L]
+        log_var   =  output[:, L:]
+
         return mu, log_var
+
+
